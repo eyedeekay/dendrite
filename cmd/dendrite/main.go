@@ -16,8 +16,13 @@ package main
 
 import (
 	"flag"
+	"net"
+	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
+	"github.com/eyedeekay/goSam"
 	"github.com/getsentry/sentry-go"
 	"github.com/matrix-org/dendrite/internal"
 	"github.com/matrix-org/dendrite/internal/caching"
@@ -54,6 +59,8 @@ var (
 
 func main() {
 	cfg := setup.ParseFlags(true)
+	// create a transport that uses SAM to dial TCP Connections
+
 	httpAddr := config.ServerAddress{}
 	httpsAddr := config.ServerAddress{}
 	if *unixSocket == "" {
@@ -140,9 +147,17 @@ func main() {
 			processCtx.ComponentFinished()
 		}()
 	}
+	defhttpClient := &http.Client{
+		Transport: &http.Transport{
+			Dial: Dial,
+		},
+	}
 
 	federationClient := basepkg.CreateFederationClient(cfg, dnsCache)
 	httpClient := basepkg.CreateClient(cfg, dnsCache)
+
+	http.DefaultClient = defhttpClient
+	http.DefaultClient.Timeout = time.Second * 100
 
 	// prepare required dependencies
 	cm := sqlutil.NewConnectionManager(processCtx, cfg.Global.DatabaseOptions)
@@ -211,4 +226,28 @@ func main() {
 
 	// We want to block forever to let the HTTP and HTTPS handler serve the APIs
 	basepkg.WaitForShutdown(processCtx)
+}
+
+var sam, err = goSam.NewDefaultClient()
+
+func Dial(network, addr string) (net.Conn, error) {
+	if network == "unix" {
+		return net.Dial(network, addr)
+	}
+
+	// convert the addr to a full URL
+	url, err := url.Parse(addr)
+	if err != nil {
+		return nil, err
+	}
+	if strings.HasSuffix(url.Host, ".i2p") {
+		return sam.Dial(network, addr)
+	}
+	ip := net.ParseIP(url.Host)
+	if ip != nil {
+		if ip.IsLoopback() {
+			return net.Dial(network, addr)
+		}
+	}
+	return net.Dial(network, addr)
 }

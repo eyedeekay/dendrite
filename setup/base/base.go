@@ -50,8 +50,6 @@ import (
 //go:embed static/*.gotmpl
 var staticContent embed.FS
 
-var StaticContent = staticContent
-
 const HTTPServerTimeout = time.Minute * 5
 
 // CreateClient creates a new client (normally used for media fetch requests).

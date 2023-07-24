@@ -11,7 +11,8 @@ require (
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/eyedeekay/onramp v0.0.0-20230118065332-eb11a4ec6434
+	github.com/eyedeekay/goSam v0.32.55-0.20230721195806-5010986b65ac
+	github.com/eyedeekay/onramp v0.33.1
 	github.com/getsentry/sentry-go v0.14.0
 	github.com/gologme/log v1.3.0
 	github.com/google/go-cmp v0.5.9

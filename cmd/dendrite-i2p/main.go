@@ -15,6 +15,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"strings"
 	"time"
@@ -258,6 +259,9 @@ func Dial(network, addr string) (net.Conn, error) {
 	return net.Dial(network, addr)
 }
 
+//go:embed static/*.gotmpl
+var staticContent embed.FS
+
 // SetupAndServeHTTP sets up the HTTP server to serve client & federation APIs
 // and adds a prometheus handler under /_dendrite/metrics.
 func SetupAndServeHTTP(
@@ -299,7 +303,7 @@ func SetupAndServeHTTP(
 	basepkg.ConfigureAdminEndpoints(processContext, routers)
 
 	// Parse and execute the landing page template
-	tmpl := template.Must(template.ParseFS(basepkg.StaticContent, "static/*.gotmpl"))
+	tmpl := template.Must(template.ParseFS(staticContent, "static/*.gotmpl"))
 	landingPage := &bytes.Buffer{}
 	if err := tmpl.ExecuteTemplate(landingPage, "index.gotmpl", map[string]string{
 		"Version": internal.VersionString(),
