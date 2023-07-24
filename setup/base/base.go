@@ -38,7 +38,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/kardianos/minwinsvc"
-	"github.com/matrix-org/dendrite/internal"
 	"github.com/matrix-org/dendrite/internal/httputil"
 
 	"github.com/sirupsen/logrus"
@@ -68,7 +67,7 @@ func CreateClient(cfg *config.Dendrite, dnsCache *fclient.DNSCache) *fclient.Cli
 		opts = append(opts, fclient.WithDNSCache(dnsCache))
 	}
 	client := fclient.NewClient(opts...)
-	client.SetUserAgent(fmt.Sprintf("Dendrite/%s", internal.VersionString()))
+	client.SetUserAgent(fmt.Sprintf("Dendrite/%s", VersionString()))
 	return client
 }
 
@@ -85,7 +84,7 @@ func CreateFederationClient(cfg *config.Dendrite, dnsCache *fclient.DNSCache) fc
 		fclient.WithTimeout(time.Minute * 5),
 		fclient.WithSkipVerify(cfg.FederationAPI.DisableTLSValidation),
 		fclient.WithKeepAlives(!cfg.FederationAPI.DisableHTTPKeepalives),
-		fclient.WithUserAgent(fmt.Sprintf("Dendrite/%s", internal.VersionString())),
+		fclient.WithUserAgent(fmt.Sprintf("Dendrite/%s", VersionString())),
 	}
 	if cfg.Global.DNSCache.Enabled {
 		opts = append(opts, fclient.WithDNSCache(dnsCache))
@@ -149,7 +148,7 @@ func SetupAndServeHTTP(
 	tmpl := template.Must(template.ParseFS(staticContent, "static/*.gotmpl"))
 	landingPage := &bytes.Buffer{}
 	if err := tmpl.ExecuteTemplate(landingPage, "index.gotmpl", map[string]string{
-		"Version": internal.VersionString(),
+		"Version": VersionString(),
 	}); err != nil {
 		logrus.WithError(err).Fatal("failed to execute landing page template")
 	}
@@ -259,4 +258,9 @@ func WaitForShutdown(processCtx *process.ProcessContext) {
 	processCtx.WaitForComponentsToFinish()
 
 	logrus.Warnf("Dendrite is exiting now")
+}
+
+func VersionString() string {
+	return "dendrite-i2p"
+	//return internal.VersionString()
 }
