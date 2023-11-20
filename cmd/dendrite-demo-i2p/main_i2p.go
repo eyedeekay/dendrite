@@ -172,7 +172,6 @@ func SetupAndServeHTTP(
 			}
 			defer listener.Close()
 			addr := listener.Addr()
-			go CinnyServe(addr.String())
 			externalServ.Addr = addr.String()
 			if err := externalServ.Serve(listener); err != nil {
 				if err != http.ErrServerClosed {
